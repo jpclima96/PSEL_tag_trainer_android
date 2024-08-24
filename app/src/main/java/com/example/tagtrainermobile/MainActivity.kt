@@ -16,9 +16,7 @@ import com.google.firebase.ktx.Firebase
 class MainActivity : AppCompatActivity() {
     private lateinit var firebaseAnalytics: FirebaseAnalytics
 
-
     var listingProducts = ListingProduct.SingleList.singleListInstance
-
 
     fun onClickedProducts(v: ListView, p: Int) {
         val intent = Intent(applicationContext, ProductActivity::class.java)
@@ -34,27 +32,30 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_TagTrainerMobile)
         setContentView(R.layout.activity_main)
-        displayListingPage()
+
         firebaseAnalytics = Firebase.analytics
+
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.APP_OPEN, null)
+
+        displayListingPage()
 
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
         val menu = findViewById<SearchView>(R.id.searchViewId)
 
         menu.setSearchableInfo(searchManager.getSearchableInfo(componentName))
-
     }
 
     fun filteredProductsList() : ArrayList<ListingProduct> {
         val listCategory = intent.getStringExtra("listType")
 
         val categoryList = ArrayList<ListingProduct>()
-            for(i in listingProducts) {
-                if(i.listProdCat == listCategory) {
-                    categoryList.add(i)
-                }
+        for(i in listingProducts) {
+            if(i.listProdCat == listCategory) {
+                categoryList.add(i)
             }
-            if (categoryList.size <= 0) return listingProducts
+        }
+        if (categoryList.size <= 0) return listingProducts
         return categoryList
     }
 
@@ -62,9 +63,8 @@ class MainActivity : AppCompatActivity() {
         val table: ListView = findViewById(R.id.tableID)
         val adapter = ListProductsAdapter(this, filteredProductsList())
         table.adapter = adapter
-            table.setOnItemClickListener { parent, view, position, id ->
-                onClickedProducts(table, filteredProductsList().get(position).listProdId-1)
-            }
+        table.setOnItemClickListener { parent, view, position, id ->
+            onClickedProducts(table, filteredProductsList()[position].listProdId-1)
+        }
     }
 }
-
