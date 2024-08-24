@@ -9,9 +9,13 @@ import android.widget.SearchView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tagtrainermobile.models.ListProductsAdapter
 import com.example.tagtrainermobile.models.ListingProduct
-
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
+
 
     var listingProducts = ListingProduct.SingleList.singleListInstance
 
@@ -31,6 +35,7 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.Theme_TagTrainerMobile)
         setContentView(R.layout.activity_main)
         displayListingPage()
+        firebaseAnalytics = Firebase.analytics
 
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
