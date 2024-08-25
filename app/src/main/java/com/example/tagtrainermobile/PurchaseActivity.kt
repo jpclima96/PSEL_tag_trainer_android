@@ -8,58 +8,73 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tagtrainermobile.models.Product
 import com.example.tagtrainermobile.models.cartProductsAdapter
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import java.text.DecimalFormat
 
 class PurchaseActivity : AppCompatActivity() {
 
-    var cartProducts = Product.SingleCart.singleCartinstance
+    private val cartProducts = Product.SingleCart.singleCartinstance
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_TagTrainerMobile)
         setContentView(R.layout.activity_purchase)
+
+        firebaseAnalytics = Firebase.analytics
+
         cartTotalPrice()
         setRandomTransactionCode()
         setTransactionInfo()
         setProgressBar()
         displayPurchaseItems()
+        logPurchaseEvent()
     }
 
-    fun cartTotalPrice() : Double {
-        var totalValue: Double = 0.0
-        val totalQuantity: Int = 0
-        for (i in cartProducts.indices) {
-            cartProducts.get(i).quantity
-            totalValue = totalValue + cartProducts.get(i).price
-
+    private fun cartTotalPrice(): Double {
+        var totalValue = 0.0
+        for (product in cartProducts) {
+            totalValue += product.price * product.quantity
         }
         return totalValue
     }
 
-    fun setRandomTransactionCode() : String {
+    private fun setRandomTransactionCode(): String {
         val numbers = (0..40103430).random()
         val character = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         val randChar = character.random()
-        return numbers.toString()+randChar
+        return numbers.toString() + randChar
     }
 
-    fun setTransactionInfo() {
+    private fun setTransactionInfo() {
         val df = DecimalFormat("#.00")
         val txtTransactioId = findViewById<TextView>(R.id.transactioId)
-            txtTransactioId.text = "Sua Compra: "+setRandomTransactionCode()
+        txtTransactioId.text = "Sua Compra: " + setRandomTransactionCode()
         val txtTransactionTotal = findViewById<TextView>(R.id.transactioTotalId)
-            txtTransactionTotal.text = "Total: R$ "+df.format(cartTotalPrice())
+        txtTransactionTotal.text = "Total: R$ " + df.format(cartTotalPrice())
     }
 
-    fun setProgressBar() {
+    private fun setProgressBar() {
         val progressBar = findViewById<ProgressBar>(R.id.progressBar2)
-            progressBar.progress = 100
+        progressBar.progress = 100
     }
 
-    fun displayPurchaseItems() {
+    private fun displayPurchaseItems() {
         val purchaseTable = findViewById<ListView>(R.id.diplayPurchaseId)
         val adapter = cartProductsAdapter(this, cartProducts)
-            purchaseTable.adapter = adapter
+        purchaseTable.adapter = adapter
+    }
+
+    private fun logPurchaseEvent() {
+        val totalValue = cartTotalPrice()
+        val params = Bundle().apply {
+            putString(FirebaseAnalytics.Param.TRANSACTION_ID, setRandomTransactionCode())
+            putDouble(FirebaseAnalytics.Param.VALUE, totalValue)
+            putString(FirebaseAnalytics.Param.CURRENCY, "BRL")
+        }
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.PURCHASE, params)
     }
 
     @Deprecated("Deprecated in Java")
@@ -68,5 +83,4 @@ class PurchaseActivity : AppCompatActivity() {
         val intent = Intent(this, HomeActivity::class.java)
         startActivity(intent)
     }
-
 }
