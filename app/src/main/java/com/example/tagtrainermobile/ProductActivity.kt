@@ -1,3 +1,5 @@
+package com.example.tagtrainermobile
+
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -24,20 +26,57 @@ class ProductActivity : AppCompatActivity() {
         setTheme(R.style.Theme_TagTrainerMobile)
         setContentView(R.layout.activity_product)
 
-        // Initialize Firebase Analytics
+        // Inicializar Firebase Analytics
         firebaseAnalytics = Firebase.analytics
-
-        // Log view_item event
-        val product = listingProducts.get(0) // Supondo que você tenha um produto específico
-        logViewItemEvent(product)
 
         setViewProducts()
     }
 
-    // Método para registrar o evento view_item
+    fun cartEmpty(): Boolean {
+        return cartProducts.size <= 0
+    }
+
+    fun cartNotEmpty(button: ImageButton) {
+        if (cartEmpty()) {
+            return
+        } else {
+            button.visibility = ImageButton.VISIBLE
+            button.setOnClickListener {
+                val intent = Intent(applicationContext, CartActivity::class.java)
+                startActivity(intent)
+            }
+        }
+    }
+
+    fun setViewProducts() {
+        val idProduct = intent.getIntExtra("id", 34)
+        val productImage = findViewById<ImageView>(R.id.productImageSrcID)
+        val textView = findViewById<TextView>(R.id.prodLabel)
+        val productDesc = findViewById<TextView>(R.id.prodDescriptionId)
+        val productPrice = findViewById<TextView>(R.id.prodPriceId)
+        val addProdButton = findViewById<Button>(R.id.buttonAddId)
+        val cartButton = findViewById<ImageButton>(R.id.cartButtonId)
+
+        cartNotEmpty(cartButton)
+
+        val product = listingProducts.get(idProduct)
+        productImage.setImageDrawable(product.listProdImg.drawable)
+        productImage.visibility = View.VISIBLE
+
+        textView.text = product.listProdName
+        productDesc.text = product.listProdDesc
+        productPrice.text = "R$ ${product.listProdPrice}"
+
+        logViewItemEvent(product)
+
+        addProdButton.setOnClickListener {
+            addToCart(addProdButton, product)
+        }
+    }
+
     private fun logViewItemEvent(product: ListingProduct) {
         val params = Bundle().apply {
-            putString(FirebaseAnalytics.Param.ITEM_ID, product.listProdName)  // O ID do produto
+            putString(FirebaseAnalytics.Param.ITEM_ID, product.listProdName)  // ID do produto
             putString(FirebaseAnalytics.Param.ITEM_NAME, product.listProdName)  // Nome do produto
             putDouble(FirebaseAnalytics.Param.PRICE, product.listProdPrice)  // Preço do produto
             putString(FirebaseAnalytics.Param.CONTENT_TYPE, "product")  // Tipo de conteúdo
@@ -45,30 +84,26 @@ class ProductActivity : AppCompatActivity() {
         firebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_ITEM, params)
     }
 
-    // Outros métodos permanecem inalterados
-    fun addToCart(v: View, p: ListingProduct ) {
-        val cartButton = findViewById(R.id.cartButtonId) as ImageButton
-        val productAdded = Product(p.listProdImg,p.listProdName, 1, p.listProdPrice)
-        val existingProduct = cartProducts.find({ it.name == productAdded.name })
-        if (existingProduct !== null) {
+    fun addToCart(v: View, p: ListingProduct) {
+        val cartButton = findViewById<ImageButton>(R.id.cartButtonId)
+        val productAdded = Product(p.listProdImg, p.listProdName, 1, p.listProdPrice)
+        val existingProduct = cartProducts.find { it.name == productAdded.name }
+
+        if (existingProduct != null) {
             cartProducts.forEach {
                 if (it.name == productAdded.name) {
-                    it.price = it.price + productAdded.price
+                    it.price += productAdded.price
                     it.quantity++
-
-                    // Log add_to_cart event for existing product
-                    logAddToCartEvent(it.name, it.price, 1)
                 }
             }
         } else {
             cartProducts.add(productAdded)
             cartNotEmpty(cartButton)
-
-            // Log add_to_cart event for new product
-            logAddToCartEvent(productAdded.name, productAdded.price, 1)
         }
-        Snackbar.make(v, "Produto Adicionado ao carrinho: " + productAdded.name, Snackbar.LENGTH_LONG)
-            .show()
+
+        Snackbar.make(v, "Produto Adicionado ao carrinho: ${productAdded.name}", Snackbar.LENGTH_LONG).show()
+
+        logAddToCartEvent(productAdded.name, productAdded.price, 1)
     }
 
     private fun logAddToCartEvent(itemName: String, itemPrice: Double, quantity: Int) {
