@@ -25,6 +25,15 @@ class MainActivity : AppCompatActivity() {
         params.putInt("id", p)
         intent.putExtras(params)
 
+        // Log product click event
+        val product = filteredProductsList()[p]
+        val eventBundle = Bundle().apply {
+            putString("product_id", product.listProdId.toString())
+            putString("product_name", product.listProdName)
+            putString("product_category", product.listProdCat)
+        }
+        firebaseAnalytics.logEvent("product_click", eventBundle)
+
         startActivity(intent)
     }
 
@@ -64,7 +73,7 @@ class MainActivity : AppCompatActivity() {
         val adapter = ListProductsAdapter(this, filteredProductsList())
         table.adapter = adapter
         table.setOnItemClickListener { parent, view, position, id ->
-            onClickedProducts(table, filteredProductsList()[position].listProdId-1)
+            onClickedProducts(table, position)
         }
     }
 }

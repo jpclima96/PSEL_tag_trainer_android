@@ -8,10 +8,12 @@ import android.widget.Button
 import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import com.example.tagtrainermobile.models.User
-
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 
 class LoginFragment : Fragment() {
-
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
     val user = User.sigleUser.instance
 
     override fun onCreateView(
@@ -23,23 +25,30 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Initialize Firebase Analytics
+        firebaseAnalytics = Firebase.analytics
+
         setProgressBar()
         setButtonLoginConfig()
     }
 
     fun setProgressBar() {
-        val progressBar = getView()?.findViewById<ProgressBar>(R.id.progressBar)
+        val progressBar = view?.findViewById<ProgressBar>(R.id.progressBar)
         progressBar?.progress = 33
     }
 
     fun setButtonLoginConfig() {
-        val button = getView()?.findViewById<Button>(R.id.enterLoginId)
-        button?.setOnClickListener(object : View.OnClickListener {
-            override fun onClick(view: View?) {
-                user.isLogged = true
-                val paymentFragment = PaymentFragment()
-              getFragmentManager()?.beginTransaction()?.add(R.id.fragmentPaymentId, paymentFragment)?.commit()
-            }
-        })
+        val button = view?.findViewById<Button>(R.id.enterLoginId)
+        button?.setOnClickListener { view ->
+            // Log login event
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN, null)
+
+            user.isLogged = true
+            val paymentFragment = PaymentFragment()
+            parentFragmentManager.beginTransaction()
+                .add(R.id.fragmentPaymentId, paymentFragment)
+                .commit()
+        }
     }
 }
