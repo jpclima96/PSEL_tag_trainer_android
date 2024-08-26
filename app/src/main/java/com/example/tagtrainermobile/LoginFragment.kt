@@ -51,10 +51,11 @@ class LoginFragment : Fragment() {
                 .commit()
         }
     }
+
     private fun logLoginFailedEvent(loginMethod: String, errorMessage: String) {
         val params = Bundle().apply {
             putString(FirebaseAnalytics.Param.METHOD, loginMethod)
-            putString(FirebaseAnalytics.Param.ERROR_MESSAGE, errorMessage)
+            putString("error_message", errorMessage)
         }
         firebaseAnalytics.logEvent("login_failed", params)
     }
