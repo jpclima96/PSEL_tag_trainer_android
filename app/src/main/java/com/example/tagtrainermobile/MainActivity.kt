@@ -18,24 +18,6 @@ class MainActivity : AppCompatActivity() {
 
     var listingProducts = ListingProduct.SingleList.singleListInstance
 
-    fun onClickedProducts(v: ListView, p: Int) {
-        val intent = Intent(applicationContext, ProductActivity::class.java)
-
-        val params = Bundle()
-        params.putInt("id", p)
-        intent.putExtras(params)
-
-        val product = filteredProductsList()[p]
-        val eventBundle = Bundle().apply {
-            putString("product_id", product.listProdId.toString())
-            putString("product_name", product.listProdName)
-            putString("product_category", product.listProdCat)
-        }
-        firebaseAnalytics.logEvent("product_click", eventBundle)
-
-        startActivity(intent)
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.Theme_TagTrainerMobile)
@@ -56,13 +38,11 @@ class MainActivity : AppCompatActivity() {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 query?.let {
-                    // Registrar o evento de busca no Firebase Analytics
                     val searchBundle = Bundle().apply {
                         putString(FirebaseAnalytics.Param.SEARCH_TERM, query)
                     }
                     firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SEARCH, searchBundle)
 
-                    // Filtrar os produtos com base no termo de busca
                     val filteredProducts = listingProducts.filter { product ->
                         product.listProdName.contains(query, ignoreCase = true) ||
                                 product.listProdCat.contains(query, ignoreCase = true)
@@ -79,15 +59,32 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
         })
-        })
     }
 
-    fun filteredProductsList() : ArrayList<ListingProduct> {
+    fun onClickedProducts(v: ListView, p: Int) {
+        val intent = Intent(applicationContext, ProductActivity::class.java)
+
+        val params = Bundle()
+        params.putInt("id", p)
+        intent.putExtras(params)
+
+        val product = filteredProductsList()[p]
+        val eventBundle = Bundle().apply {
+            putString("product_id", product.listProdId.toString())
+            putString("product_name", product.listProdName)
+            putString("product_category", product.listProdCat)
+        }
+        firebaseAnalytics.logEvent("product_click", eventBundle)
+
+        startActivity(intent)
+    }
+
+    fun filteredProductsList(): ArrayList<ListingProduct> {
         val listCategory = intent.getStringExtra("listType")
 
         val categoryList = ArrayList<ListingProduct>()
-        for(i in listingProducts) {
-            if(i.listProdCat == listCategory) {
+        for (i in listingProducts) {
+            if (i.listProdCat == listCategory) {
                 categoryList.add(i)
             }
         }
@@ -114,3 +111,4 @@ class MainActivity : AppCompatActivity() {
             onClickedProducts(table, position)
         }
     }
+}
