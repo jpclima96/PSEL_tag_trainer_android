@@ -1,5 +1,6 @@
 package com.example.tagtrainermobile
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -118,6 +119,7 @@ class HomeActivity : AppCompatActivity() {
 
     private inner class homeBannerAdapter(val banners : ArrayList<Banners>) : PagerAdapter() {
 
+        @SuppressLint("SuspiciousIndentation")
         override fun instantiateItem(container: ViewGroup, position: Int): Any {
             val view: View = layoutInflater.inflate(R.layout.banner_pager_item,container, false) as ViewGroup
             val teste = view.findViewById<ViewPager>(R.id.bannerPagerId) as ImageView

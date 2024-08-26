@@ -114,4 +114,3 @@ class MainActivity : AppCompatActivity() {
             onClickedProducts(table, position)
         }
     }
-}
