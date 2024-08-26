@@ -25,7 +25,6 @@ class MainActivity : AppCompatActivity() {
         params.putInt("id", p)
         intent.putExtras(params)
 
-        // Log product click event
         val product = filteredProductsList()[p]
         val eventBundle = Bundle().apply {
             putString("product_id", product.listProdId.toString())
@@ -50,9 +49,37 @@ class MainActivity : AppCompatActivity() {
 
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
-        val menu = findViewById<SearchView>(R.id.searchViewId)
+        val searchView = findViewById<SearchView>(R.id.searchViewId)
 
-        menu.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.let {
+                    // Registrar o evento de busca no Firebase Analytics
+                    val searchBundle = Bundle().apply {
+                        putString(FirebaseAnalytics.Param.SEARCH_TERM, query)
+                    }
+                    firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SEARCH, searchBundle)
+
+                    // Filtrar os produtos com base no termo de busca
+                    val filteredProducts = listingProducts.filter { product ->
+                        product.listProdName.contains(query, ignoreCase = true) ||
+                                product.listProdCat.contains(query, ignoreCase = true)
+                    }
+
+                    val listView = findViewById<ListView>(R.id.tableID)
+                    val adapter = ListProductsAdapter(this@MainActivity, ArrayList(filteredProducts))
+                    listView.adapter = adapter
+                }
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                return false
+            }
+        })
+        })
     }
 
     fun filteredProductsList() : ArrayList<ListingProduct> {
@@ -64,6 +91,17 @@ class MainActivity : AppCompatActivity() {
                 categoryList.add(i)
             }
         }
+
+        if (categoryList.isNotEmpty()) {
+            val eventBundle = Bundle().apply {
+                putString(FirebaseAnalytics.Param.ITEM_CATEGORY, listCategory)
+                putInt(FirebaseAnalytics.Param.ITEMS, categoryList.size)
+                val itemIds = categoryList.map { it.listProdId.toString() }
+                putStringArrayList(FirebaseAnalytics.Param.ITEM_LIST_ID, ArrayList(itemIds))
+            }
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.VIEW_ITEM_LIST, eventBundle)
+        }
+
         if (categoryList.size <= 0) return listingProducts
         return categoryList
     }
